@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+results/*/
+!results/.gitkeep
+.env
+
+# Kubernetes local configuration
+kubeconfig
+*.kubeconfig
+
+# Logs and test output
+*.log
+coverage/

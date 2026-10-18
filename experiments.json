@@ -1,0 +1,10 @@
+{
+  "defaults": { "requests": 2000, "concurrency": 30, "rps": 100, "repetitions": 10 },
+  "conditions": ["none", "static", "rbah"],
+  "profiles": [
+    { "name": "healthy", "target": "pricing", "mode": "none" },
+    { "name": "pricing-intermittent", "target": "pricing", "mode": "intermittent", "delayMs": 150, "probability": 0.3 },
+    { "name": "pricing-sustained", "target": "pricing", "mode": "constant", "delayMs": 150 },
+    { "name": "inventory-shared", "target": "inventory", "mode": "constant", "delayMs": 150 }
+  ]
+}

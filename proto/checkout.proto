@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package rbah.checkout;
+
+service OrderService {
+  rpc PlaceOrder (CheckoutRequest) returns (CheckoutResponse);
+}
+
+service PricingService {
+  rpc CalculatePrice (PricingRequest) returns (PricingResponse);
+}
+
+service InventoryService {
+  rpc CheckStock (InventoryRequest) returns (InventoryResponse);
+}
+
+message CheckoutRequest {
+  string request_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+  double base_price = 4;
+}
+
+message CheckoutResponse {
+  string request_id = 1;
+  string pricing_replica = 2;
+  string inventory_replica = 3;
+  double final_price = 4;
+  string hedge_strategy = 5;
+  bool hedge_fired = 6;
+  string winner = 7;
+  double elapsed_ms = 8;
+}
+
+message PricingRequest {
+  string request_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+  double base_price = 4;
+}
+
+message PricingResponse {
+  string request_id = 1;
+  string pricing_replica = 2;
+  string inventory_replica = 3;
+  double final_price = 4;
+}
+
+message InventoryRequest {
+  string request_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+}
+
+message InventoryResponse {
+  string request_id = 1;
+  string inventory_replica = 2;
+  bool available = 3;
+}

@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-none
+  namespace: rbah
+  labels: { app: order, strategy: none }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: order, strategy: none } }
+  template:
+    metadata:
+      labels: { app: order, strategy: none }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/port: "8080", prometheus.io/path: /metrics }
+    spec:
+      containers:
+        - name: order
+          image: rbah-order:dev
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: grpc, containerPort: 50051 }, { name: http, containerPort: 8080 }]
+          env: [{ name: HEDGE_STRATEGY, value: none }, { name: PRICING_GRPC_ADDRESS, value: pricing:50052 }]
+          readinessProbe: { httpGet: { path: /readyz, port: http }, initialDelaySeconds: 2 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 5 }
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 256Mi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-static
+  namespace: rbah
+  labels: { app: order, strategy: static }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: order, strategy: static } }
+  template:
+    metadata:
+      labels: { app: order, strategy: static }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/port: "8080", prometheus.io/path: /metrics }
+    spec:
+      containers:
+        - name: order
+          image: rbah-order:dev
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: grpc, containerPort: 50051 }, { name: http, containerPort: 8080 }]
+          env: [{ name: HEDGE_STRATEGY, value: static }, { name: STATIC_HEDGE_DELAY_MS, value: "50" }, { name: PRICING_GRPC_ADDRESS, value: pricing:50052 }]
+          readinessProbe: { httpGet: { path: /readyz, port: http }, initialDelaySeconds: 2 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 5 }
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 256Mi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-rbah
+  namespace: rbah
+  labels: { app: order, strategy: rbah }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: order, strategy: rbah } }
+  template:
+    metadata:
+      labels: { app: order, strategy: rbah }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/port: "8080", prometheus.io/path: /metrics }
+    spec:
+      containers:
+        - name: order
+          image: rbah-order:dev
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: grpc, containerPort: 50051 }, { name: http, containerPort: 8080 }]
+          env: [{ name: HEDGE_STRATEGY, value: rbah }, { name: RBAH_WINDOW_SIZE, value: "200" }, { name: RBAH_WARMUP_REQUESTS, value: "50" }, { name: RBAH_TOKEN_CAPACITY, value: "10" }, { name: RBAH_REFILL_PER_REQUEST, value: "0.1" }, { name: PRICING_GRPC_ADDRESS, value: pricing:50052 }]
+          readinessProbe: { httpGet: { path: /readyz, port: http }, initialDelaySeconds: 2 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 5 }
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: order-none, namespace: rbah, labels: { app: order, strategy: none } }
+spec: { selector: { app: order, strategy: none }, ports: [{ name: grpc, port: 50051, targetPort: grpc }, { name: http, port: 8080, targetPort: http }] }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: order-static, namespace: rbah, labels: { app: order, strategy: static } }
+spec: { selector: { app: order, strategy: static }, ports: [{ name: grpc, port: 50051, targetPort: grpc }, { name: http, port: 8080, targetPort: http }] }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: order-rbah, namespace: rbah, labels: { app: order, strategy: rbah } }
+spec: { selector: { app: order, strategy: rbah }, ports: [{ name: grpc, port: 50051, targetPort: grpc }, { name: http, port: 8080, targetPort: http }] }

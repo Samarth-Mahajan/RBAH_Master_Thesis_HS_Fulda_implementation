@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing
+  namespace: rbah
+  labels: { app: pricing }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: pricing } }
+  template:
+    metadata:
+      labels: { app: pricing }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      containers:
+        - name: pricing
+          image: rbah-pricing:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: grpc, containerPort: 50052 }
+            - { name: http, containerPort: 8080 }
+          env:
+            - { name: INVENTORY_GRPC_ADDRESS, value: inventory:50053 }
+          readinessProbe: { httpGet: { path: /readyz, port: http }, initialDelaySeconds: 2 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 5 }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pricing
+  namespace: rbah
+  labels: { app: pricing }
+spec:
+  selector: { app: pricing }
+  ports:
+    - { name: grpc, port: 50052, targetPort: grpc }
+    - { name: http, port: 8080, targetPort: http }

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rbah-dashboard
+  namespace: rbah
+  labels: { grafana_dashboard: "1" }
+data:
+  rbah-dashboard.json: |
+    {
+      "annotations":{"list":[]},"editable":true,"panels":[
+        {"type":"timeseries","title":"P95 checkout latency by strategy","targets":[{"expr":"histogram_quantile(0.95, sum by (le,strategy) (rate(rbah_checkout_duration_ms_bucket[1m])))","legendFormat":"{{strategy}}"}]},
+        {"type":"timeseries","title":"Adaptive threshold and token budget","targets":[{"expr":"rbah_adaptive_threshold_ms","legendFormat":"threshold {{strategy}}"},{"expr":"rbah_token_bucket_tokens","legendFormat":"tokens"}]},
+        {"type":"timeseries","title":"Hedge attempts and suppressed hedges","targets":[{"expr":"sum by (strategy) (rate(rbah_hedge_attempts_total[1m]))","legendFormat":"attempts {{strategy}}"},{"expr":"rate(rbah_hedges_suppressed_total[1m])","legendFormat":"suppressed"}]},
+        {"type":"timeseries","title":"Cancellation evidence","targets":[{"expr":"sum by (role) (rate(rbah_loser_cancellations_requested_total[1m]))","legendFormat":"requested {{role}}"},{"expr":"sum(rate(rbah_server_cancellations_observed_total[1m]))","legendFormat":"observed by Pricing"}]}
+      ],"schemaVersion":39,"title":"RBAH Thesis Evaluation","version":1
+    }
