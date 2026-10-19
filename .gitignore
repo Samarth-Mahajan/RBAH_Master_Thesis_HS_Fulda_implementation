@@ -12,3 +12,7 @@ kubeconfig
 # Logs and test output
 *.log
 coverage/
+
+# Files
+Agents.md
+RBAH_Thesis_Proposal_v2_Technically_Revised.docx
